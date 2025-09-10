@@ -1,18 +1,36 @@
 const { chromium } = require('playwright');
 
 async function automateProductSearch() {
-  // Launch browser
-  const browser = await chromium.launch({ headless: false });
+  // Launch browser with explicit headless configuration for Ubuntu
+  const browser = await chromium.launch({ 
+    headless: true,
+    // Additional args for better Ubuntu compatibility
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-extensions'
+    ]
+  });
+  
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
-    console.log('🚀 Starting automation script...');
+    console.log('🚀 Starting automation script in headless mode...');
     
     // Step 1: Navigate to the website
     console.log('📍 Navigating to https://www.automationexercise.com/');
-    await page.goto('https://www.automationexercise.com/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('https://www.automationexercise.com/', { 
+      waitUntil: 'networkidle',
+      timeout: 30000 
+    });
 
     // Step 2: Click on Products link
     console.log('🔗 Clicking on Products link...');

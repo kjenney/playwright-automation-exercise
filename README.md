@@ -49,95 +49,106 @@ sudo apt install nodejs npm
 
 ## Installation
 
-1. **Clone or download this project directory:**
+1. **Navigate to the project directory:**
    ```bash
-   # If you have the files, navigate to the project directory
    cd playwright-automation-exercise
    ```
 
-2. **Initialize npm and install dependencies:**
+2. **Run the automated setup:**
    ```bash
-   # Initialize package.json if it doesn't exist
-   npm init -y
-   
-   # Install Playwright
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+   Or manually install:
+   ```bash
    npm install playwright
-   ```
-
-3. **Install Playwright browsers:**
-   ```bash
-   # This downloads the browser binaries (Chrome, Firefox, Safari)
    npx playwright install
-   ```
-
-   If you encounter permission issues, you might need to install system dependencies:
-   ```bash
-   # Install system dependencies for browsers
-   npx playwright install-deps
+   sudo npx playwright install-deps
    ```
 
 ## Project Structure
 
 ```
 playwright-automation-exercise/
-├── README.md                 # This file
-├── automation_script.js      # Main automation script
-├── package.json             # Node.js dependencies
-├── setup.sh                 # Setup script for Ubuntu
-└── search_results.json      # Output file (created after running)
+├── README.md                      # This file
+├── automation_script.js           # Main automation script (headless optimized)
+├── package.json                  # Node.js dependencies
+├── setup.sh                      # Ubuntu setup script
+├── troubleshoot.sh               # Ubuntu troubleshooting script
+├── QUICKSTART.md                 # Quick start instructions
+└── search_results.json           # Output file (created after running)
 ```
 
 ## Usage
 
 ### Quick Start
 ```bash
-# Make setup script executable and run it
-chmod +x setup.sh
+# Make scripts executable
+chmod +x setup.sh troubleshoot.sh
+
+# Run setup
 ./setup.sh
+
+# Run the automation
+node automation_script.js
 ```
 
-### Basic Usage
+### If You Get Display/X Server Errors
 
-Run the automation script:
+If you see errors like "Missing X server or $DISPLAY", try these solutions:
+
+#### Solution 1: Run the troubleshoot script
+```bash
+chmod +x troubleshoot.sh
+./troubleshoot.sh
+```
+
+#### Solution 2: Use xvfb (Virtual Display)
+```bash
+# Install xvfb if not already installed
+sudo apt install xvfb
+
+# Run with virtual display
+xvfb-run -a node automation_script.js
+```
+
+#### Solution 3: Check the script has headless: true
+Make sure your automation_script.js has:
+```javascript
+const browser = await chromium.launch({ 
+  headless: true,  // Must be true for servers without display
+  args: ['--no-sandbox', '--disable-dev-shm-usage']
+});
+```
+
+### Alternative Running Methods
+
+**Basic run:**
 ```bash
 node automation_script.js
 ```
 
-The script will:
-- Open a Chrome browser window (visible by default)
-- Navigate through the automation steps
-- Display progress in the console
-- Save results to `search_results.json`
-- Close the browser automatically
-
-### Alternative npm commands
+**With npm:**
 ```bash
-npm start          # Run the script
-npm run install-browsers  # Install browser binaries
-npm run install-deps     # Install system dependencies
+npm start
 ```
 
-### Running in Headless Mode
+**With xvfb (for display issues):**
+```bash
+xvfb-run -a node automation_script.js
+```
 
-To run the browser in the background (headless mode), modify the script:
-
-1. Open `automation_script.js`
-2. Change `headless: false` to `headless: true` in the browser launch options
-3. Run the script normally
-
-### Custom Search Terms
-
-To search for different products, modify the search term in the script:
-1. Open `automation_script.js`
-2. Find the line: `await page.getByRole('textbox', { name: 'Search Product' }).fill('dress');`
-3. Replace 'dress' with your desired search term
-4. Save and run the script
+**Debug mode:**
+```bash
+DEBUG=pw:api node automation_script.js
+```
 
 ## Expected Output
 
 ### Console Output
 ```
-🚀 Starting automation script...
+🚀 Starting automation script in headless mode...
 📍 Navigating to https://www.automationexercise.com/
 🔗 Clicking on Products link...
 🔍 Searching for "dress"...
@@ -169,15 +180,27 @@ To search for different products, modify the search term in the script:
 🔒 Browser closed.
 ```
 
-### File Output
-A file named `search_results.json` will be created containing the extracted product data.
-
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Common Ubuntu Issues and Solutions
 
-#### 1. Browser Installation Issues
-If you encounter errors related to browser installation:
+#### 1. "Missing X server or $DISPLAY" Error
+This happens when the browser tries to open in GUI mode on a headless server.
+
+**Solutions:**
+```bash
+# Option A: Use xvfb virtual display
+sudo apt install xvfb
+xvfb-run -a node automation_script.js
+
+# Option B: Run troubleshoot script
+./troubleshoot.sh
+
+# Option C: Verify headless mode in script
+# Make sure automation_script.js has headless: true
+```
+
+#### 2. Browser Installation Issues
 ```bash
 # Install system dependencies
 sudo apt update
@@ -185,66 +208,80 @@ sudo apt install -y libnss3-dev libatk-bridge2.0-dev libdrm-dev libxkbcommon-dev
 
 # Reinstall browser binaries
 npx playwright install chromium
+sudo npx playwright install-deps chromium
 ```
 
-#### 2. Permission Errors
-If you get permission errors:
+#### 3. Permission Errors
 ```bash
 # Fix npm permissions
 sudo chown -R $(whoami) $(npm config get prefix)/{lib/node_modules,bin,share}
 
-# Or use npm with --unsafe-perm flag
-sudo npm install playwright --unsafe-perm=true --allow-root
+# Or install with proper permissions
+npm install playwright --unsafe-perm=true
 ```
 
-#### 3. Display Issues (Headless Mode)
-If running on a server without a display and getting display errors:
-- Make sure to set `headless: true` in the script
-- Or install a virtual display:
+#### 4. WSL (Windows Subsystem for Linux) Issues
+If running in WSL:
 ```bash
-sudo apt install xvfb
-export DISPLAY=:99
-Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+# Make sure you're using WSL 2
+wsl --set-version Ubuntu 2
+
+# Set display if needed
+export DISPLAY=:0
+
+# Use headless mode (recommended for WSL)
+# Ensure headless: true in the script
 ```
 
-#### 4. Network Issues
-If the script fails to load the website:
-- Check your internet connection
-- Verify that https://www.automationexercise.com/ is accessible
-- Try increasing timeout values in the script
-
-#### 5. Element Not Found Errors
-If the script can't find page elements:
-- The website structure might have changed
-- Try adding wait conditions or increasing delays
-- Use Playwright's debug mode: `DEBUG=pw:api node automation_script.js`
-
-## Advanced Usage
-
-### Debug Mode
-Run with debug output:
+#### 5. Network/Timeout Issues
 ```bash
+# Test basic connectivity
+ping automationexercise.com
+
+# Increase timeouts in script or run with:
 DEBUG=pw:api node automation_script.js
 ```
 
-### Slow Motion
-To slow down the automation for better visibility, modify the browser launch:
-```javascript
-const browser = await chromium.launch({ 
-  headless: false, 
-  slowMo: 1000 // 1 second delay between actions
-});
+## Advanced Usage
+
+### Testing Playwright Installation
+```bash
+# Run basic test
+node -e "console.log('Testing...'); const { chromium } = require('playwright'); (async () => { const browser = await chromium.launch({headless: true}); console.log('✅ Playwright working!'); await browser.close(); })()"
 ```
 
-### Different Browsers
-To use Firefox or Safari instead of Chrome:
-```javascript
-const { firefox } = require('playwright');
-// or
-const { webkit } = require('playwright');
+### Running with Different Options
+```bash
+# Slow motion (for debugging)
+# Edit script and add: slowMo: 1000 to launch options
 
-const browser = await firefox.launch({ headless: false });
+# Different browser
+# Change chromium to firefox or webkit in the script
+
+# Custom search term
+# Edit the script and change 'dress' to your desired search term
 ```
+
+### Environment Variables
+```bash
+# Set display for GUI apps (if needed)
+export DISPLAY=:0
+
+# Debug Playwright
+export DEBUG=pw:api
+
+# Then run the script
+node automation_script.js
+```
+
+## Files Description
+
+- **automation_script.js**: Main script optimized for headless Ubuntu execution
+- **setup.sh**: Automated setup script for Ubuntu systems
+- **troubleshoot.sh**: Diagnostic and fix script for common Ubuntu issues
+- **package.json**: Node.js project configuration
+- **README.md**: This comprehensive documentation
+- **QUICKSTART.md**: Quick reference guide
 
 ## Contributing
 
@@ -262,20 +299,25 @@ This project is for educational and demonstration purposes. Please respect the w
 ## Support
 
 If you encounter issues:
-1. Check the troubleshooting section above
-2. Ensure all dependencies are properly installed
-3. Verify your Ubuntu version compatibility
-4. Check Playwright documentation: https://playwright.dev/
-5. Test with a simple Playwright example first
 
-## Script Details
+1. **First, run the troubleshoot script:**
+   ```bash
+   ./troubleshoot.sh
+   ```
 
-The automation uses Playwright's modern web automation capabilities:
-- **Page Navigation**: Uses `page.goto()` for reliable navigation
-- **Element Selection**: Utilizes role-based selectors for better reliability
-- **Wait Conditions**: Implements `waitForLoadState()` to ensure page readiness
-- **Data Extraction**: Uses `page.evaluate()` for client-side JavaScript execution
-- **Error Handling**: Comprehensive try-catch blocks with cleanup
-- **Logging**: Detailed console output for debugging and monitoring
+2. **Check common solutions:**
+   - Ensure `headless: true` is set in the script
+   - Try running with `xvfb-run -a node automation_script.js`
+   - Verify all dependencies are installed
 
-This script demonstrates best practices for web automation including proper resource cleanup, error handling, and reliable element selection strategies.
+3. **For persistent issues:**
+   - Check if you're in WSL (Windows Subsystem for Linux)
+   - Verify Ubuntu version compatibility
+   - Test with: `node test_playwright.js` (created by troubleshoot script)
+
+4. **Get help:**
+   - Check Playwright documentation: https://playwright.dev/
+   - Ubuntu community forums
+   - Playwright GitHub issues
+
+The script is specifically optimized for Ubuntu headless execution with comprehensive error handling and troubleshooting support.
