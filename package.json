@@ -1,0 +1,35 @@
+{
+  "name": "playwright-automation-exercise",
+  "version": "1.0.0",
+  "description": "Playwright automation script for AutomationExercise.com product search",
+  "main": "automation_script.js",
+  "scripts": {
+    "start": "node automation_script.js",
+    "test": "node automation_script.js",
+    "install-browsers": "npx playwright install",
+    "install-deps": "npx playwright install-deps"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "web-scraping",
+    "testing",
+    "javascript"
+  ],
+  "author": "Automation Exercise",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "local"
+  },
+  "bugs": {
+    "url": "local"
+  },
+  "homepage": "local"
+}
